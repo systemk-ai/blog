@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from "astro:content";
+import PostMeta from "../components/PostMeta.astro";
+import Layout from "../layouts/Layout.astro";
+
+// Rest param so nested ids (e.g. `foo/bar`) also resolve. getStaticPaths
+// enumerates ALL entries — including drafts — so drafts are reachable by URL.
+export async function getStaticPaths() {
+	const posts = await getCollection("blog");
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+	<article data-pagefind-body>
+		<h1>{post.data.title}</h1>
+		<PostMeta
+			pubDate={post.data.pubDate}
+			tags={post.data.tags}
+			draft={post.data.draft}
+		/>
+		<Content />
+	</article>
+</Layout>

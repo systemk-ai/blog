@@ -1,0 +1,26 @@
+---
+// Shared, style-critical metadata line for an article (date + tags).
+// Frequently reused across list and article views, so it lives in src/components.
+interface Props {
+	pubDate: Date;
+	tags?: string[];
+	draft?: boolean;
+}
+
+const { pubDate, tags = [], draft = false } = Astro.props;
+const formatted = pubDate.toISOString().slice(0, 10);
+---
+
+<p class="post-meta">
+	<time datetime={pubDate.toISOString()}>{formatted}</time>
+	{draft && <span class="post-meta__draft">Draft</span>}
+	{
+		tags.length > 0 && (
+			<span class="post-meta__tags">
+				{tags.map((tag) => (
+					<span class="post-meta__tag">{tag}</span>
+				))}
+			</span>
+		)
+	}
+</p>
