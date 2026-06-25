@@ -9,7 +9,7 @@ default:
 dev:
   pnpm dev
 
-# Build the static site to dist/.
+# Build the static site to dist/ (includes the Pagefind search index).
 build:
   pnpm build
 
@@ -42,12 +42,6 @@ verify:
   pnpm check
   pnpm test
   pnpm build
-
-# Build and generate the Pagefind search index into dist/.
-# (Wire the search UI per .agents/knowledge/SPEC.md before relying on this.)
-search-index:
-  pnpm build
-  pnpm exec pagefind --site dist
 
 # Remove build output and caches.
 clean:

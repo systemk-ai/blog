@@ -11,7 +11,7 @@ permissions:
   pages: write
   id-token: write
 
-# Only one concurrent deployment; let in-progress runs finish.
+# One concurrent deployment; let in-progress runs finish.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -20,29 +20,21 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      # Official Astro → GitHub Pages static flow:
+      # https://docs.astro.build/en/guides/deploy/github/
+      # withastro/action installs deps (pnpm, from packageManager), runs the build,
+      # and uploads the Pages artifact. site/base come from astro.config.mjs, and the
+      # Pagefind search index is produced by the astro:build:done hook in that config.
+      - uses: withastro/action@v3
         with:
           node-version: 22
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Build (site/base baked into astro.config.mjs)
-        run: pnpm build
-      # When the Pagefind search UI lands (see .agents/knowledge/SPEC.md),
-      # add: pnpm exec pagefind --site dist
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
 
   deploy:
-    name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
+    name: Deploy
     needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
