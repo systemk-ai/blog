@@ -76,6 +76,6 @@ export default defineConfig({
 		command: "pnpm build && pnpm preview",
 		url: "http://localhost:4321/blog/",
 		reuseExistingServer: !process.env.CI,
-		timeout: 120 * 1000,
+		timeout: 180 * 1000,
 	},
 });
