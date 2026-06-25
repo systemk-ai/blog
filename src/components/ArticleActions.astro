@@ -1,0 +1,94 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+	mdUrl: string;
+	ghUrl: string;
+}
+const { mdUrl, ghUrl } = Astro.props;
+---
+
+<div class="relative" data-article-actions data-md={mdUrl}>
+	<div class="inline-flex overflow-hidden rounded-sm border border-line bg-paper">
+		<button
+			type="button"
+			data-copy
+			class="inline-flex h-9 items-center gap-1.5 px-3 text-[13px] text-body transition-colors hover:bg-paper-warm"
+		>
+			<Icon name="clipboard" size={14} />
+			<span data-copy-label>コピー</span>
+		</button>
+		<button
+			type="button"
+			data-toggle
+			aria-label="その他の操作"
+			aria-expanded="false"
+			class="inline-flex h-9 w-8 items-center justify-center border-l border-line-subtle text-muted transition-colors hover:bg-paper-warm"
+		>
+			<Icon name="chevron-down" size={15} />
+		</button>
+	</div>
+	<div
+		data-menu
+		hidden
+		class="absolute top-10 right-0 z-30 flex min-w-[212px] flex-col rounded-md border border-line-subtle bg-paper p-1 shadow-md"
+	>
+		<a
+			href={mdUrl}
+			target="_blank"
+			rel="noopener"
+			class="flex items-center gap-2.5 rounded-sm px-3 py-2 text-[13px] text-body no-underline transition-colors hover:bg-paper-warm"
+		>
+			<Icon name="file-text" size={15} class="text-muted" /> Markdownで開く
+		</a>
+		<a
+			href={ghUrl}
+			target="_blank"
+			rel="noopener"
+			class="flex items-center gap-2.5 rounded-sm px-3 py-2 text-[13px] text-body no-underline transition-colors hover:bg-paper-warm"
+		>
+			<Icon name="github" size={15} class="text-muted" /> GitHubソースを開く
+		</a>
+	</div>
+</div>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>(
+		"[data-article-actions]",
+	)) {
+		const copyBtn = root.querySelector<HTMLButtonElement>("[data-copy]");
+		const label = root.querySelector<HTMLElement>("[data-copy-label]");
+		const toggle = root.querySelector<HTMLButtonElement>("[data-toggle]");
+		const menu = root.querySelector<HTMLElement>("[data-menu]");
+		const mdUrl = root.dataset.md ?? "";
+
+		copyBtn?.addEventListener("click", async () => {
+			try {
+				const res = await fetch(mdUrl);
+				if (!res.ok) return; // never copy an error page
+				const text = await res.text();
+				await navigator.clipboard.writeText(text);
+				if (label) {
+					const prev = label.textContent;
+					label.textContent = "コピーしました";
+					setTimeout(() => {
+						label.textContent = prev;
+					}, 1800);
+				}
+			} catch {
+				// clipboard or fetch unavailable — leave the label unchanged
+			}
+		});
+
+		const setOpen = (open: boolean) => {
+			if (!menu || !toggle) return;
+			menu.toggleAttribute("hidden", !open);
+			toggle.setAttribute("aria-expanded", String(open));
+		};
+		toggle?.addEventListener("click", (e) => {
+			e.stopPropagation();
+			setOpen(menu?.hasAttribute("hidden") ?? false);
+		});
+		document.addEventListener("click", () => setOpen(false));
+	}
+</script>

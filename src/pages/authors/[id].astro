@@ -1,0 +1,73 @@
+---
+import { getCollection, render } from "astro:content";
+import ArticleRow from "../../components/ArticleRow.astro";
+import Icon from "../../components/Icon.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+	const authors = await getCollection("authors");
+	const posts = await getCollection("blog", ({ data }) => !data.draft);
+	return authors.map((author) => ({
+		params: { id: author.id },
+		props: {
+			author,
+			items: posts
+				.filter((p) => p.data.authors.some((a) => a.id === author.id))
+				.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+		},
+	}));
+}
+
+const { author, items } = Astro.props;
+const { Content } = await render(author);
+const base = import.meta.env.BASE_URL;
+const { data } = author;
+---
+
+<BaseLayout
+	title={data.nameJa}
+	description={`${data.nameJa}（${data.nameEn}）の研究・記事一覧。`}
+>
+	<section class="border-b border-line-subtle">
+		<div class="mx-auto max-w-[760px] px-7 pt-12 pb-9">
+			<a
+				href={base}
+				class="mb-5 inline-flex items-center gap-1.5 text-[13px] text-muted no-underline"
+			>
+				<Icon name="arrow-left" size={14} /> ホームへ
+			</a>
+			<div class="flex items-start gap-5">
+				<span
+					class="flex h-16 w-16 flex-none items-center justify-center rounded-full bg-blue-50 font-serif text-2xl text-primary"
+					>{data.nameEn.slice(0, 1)}</span
+				>
+				<div>
+					<h1 class="font-serif text-2xl text-strong">{data.nameJa}</h1>
+					<div class="mt-1 font-mono text-xs text-faint">{data.nameEn}</div>
+					<div class="mt-1 text-sm text-muted">{data.role}</div>
+					{
+						data.affiliation && (
+							<div class="text-xs text-faint">{data.affiliation}</div>
+						)
+					}
+				</div>
+			</div>
+			<div class="sk-prose mt-5 text-sm"><Content /></div>
+			{
+				data.links.length > 0 && (
+					<div class="mt-4 flex flex-wrap gap-3">
+						{data.links.map((l) => (
+							<a href={l.href} class="text-[13px] text-link no-underline">
+								{l.label} →
+							</a>
+						))}
+					</div>
+				)
+			}
+		</div>
+	</section>
+	<div class="mx-auto max-w-[1080px] px-8 pt-8">
+		<div class="sk-eyebrow mb-2">記事 ＿ {items.length} 件</div>
+		{items.map((post) => <ArticleRow post={post} />)}
+	</div>
+</BaseLayout>

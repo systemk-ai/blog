@@ -1,0 +1,28 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	author: CollectionEntry<"authors">;
+}
+const { author } = Astro.props;
+const { data } = author;
+const base = import.meta.env.BASE_URL;
+const initial = data.nameEn.slice(0, 1);
+---
+
+<a
+	href={`${base}authors/${author.id}/`}
+	class="flex items-start gap-4 rounded-md border border-line-subtle bg-paper p-5 no-underline transition-colors hover:bg-paper-warm"
+>
+	<span
+		class="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-blue-50 font-serif text-lg text-primary"
+		>{initial}</span
+	>
+	<span class="min-w-0">
+		<span class="block font-sans text-[15px] font-semibold text-strong"
+			>{data.nameJa}
+			<span class="text-xs font-normal text-faint">{data.nameEn}</span></span
+		>
+		<span class="mt-0.5 block text-xs text-muted">{data.role}</span>
+	</span>
+</a>

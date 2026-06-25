@@ -1,26 +1,28 @@
 ---
-// Shared, style-critical metadata line for an article (date + tags).
-// Frequently reused across list and article views, so it lives in src/components.
+// Article byline + meta line: authors on top (body ink), date · source · reading
+// time beneath (faint). Author names are resolved by the page and passed in.
 interface Props {
+	authors?: string[];
 	pubDate: Date;
-	tags?: string[];
-	draft?: boolean;
+	source?: string;
+	readingMinutes?: number;
 }
-
-const { pubDate, tags = [], draft = false } = Astro.props;
-const formatted = pubDate.toISOString().slice(0, 10);
+const { authors = [], pubDate, source, readingMinutes } = Astro.props;
+const dateF = pubDate.toISOString().slice(0, 10).replace(/-/g, ".");
+const sub = [
+	`${dateF} 更新`,
+	source,
+	readingMinutes ? `読了 約${readingMinutes}分` : null,
+]
+	.filter(Boolean)
+	.join(" ・ ");
 ---
 
-<p class="post-meta">
-	<time datetime={pubDate.toISOString()}>{formatted}</time>
-	{draft && <span class="post-meta__draft">Draft</span>}
+<div class="font-sans">
 	{
-		tags.length > 0 && (
-			<span class="post-meta__tags">
-				{tags.map((tag) => (
-					<span class="post-meta__tag">{tag}</span>
-				))}
-			</span>
+		authors.length > 0 && (
+			<div class="text-[13px] text-body">{authors.join(" ・ ")}</div>
 		)
 	}
-</p>
+	<div class="mt-0.5 text-xs text-faint">{sub}</div>
+</div>

@@ -1,29 +1,133 @@
 ---
 import { getCollection } from "astro:content";
-import PostMeta from "../components/PostMeta.astro";
-import Layout from "../layouts/Layout.astro";
+import ArticleRow from "../components/ArticleRow.astro";
+import Icon from "../components/Icon.astro";
+import KindBadge from "../components/KindBadge.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 
 const base = import.meta.env.BASE_URL;
-
-// Drafts are excluded from the list, but still reachable by direct URL
-// (see src/pages/[...slug].astro, which builds a page for every entry).
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+const research = posts.filter((p) => p.data.type === "research");
+const cases = posts.filter((p) => p.data.type === "case");
+const latest = posts.slice(0, 3);
+
+const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, ".");
 ---
 
-<Layout title="Blog" description="A minimal static blog built with Astro.">
-	<main>
-		<h1>Blog</h1>
-		<ul>
+<BaseLayout
+	title="SystemK AI"
+	description="株式会社システムケイ AI研究開発部門による、視覚AIと生成AIの研究記録と導入事例。"
+	active="home"
+>
+	<!-- Hero -->
+	<section class="border-b border-line-subtle">
+		<div class="mx-auto max-w-[1080px] px-8 pt-20 pb-14">
+			<div class="max-w-[620px]">
+				<div class="sk-eyebrow mb-4">SystemK AI ＿ Research &amp; Engineering Notes</div>
+				<h1
+					class="mb-5 font-serif text-4xl leading-[1.24] tracking-tight text-strong"
+				>
+					見るAIと、つくるAIの<br />研究ノート。
+				</h1>
+				<p class="mb-6 font-serif text-md leading-[1.85] text-body">
+					株式会社システムケイ AI研究開発部門による、視覚AIと生成AIの研究記録と導入事例。日々の検証・実装・公開された成果を、論文と現場の両面から記録しています。
+				</p>
+				<div class="flex flex-wrap gap-2.5">
+					<a
+						href="#research"
+						class="inline-flex h-10 items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-on-primary no-underline transition-colors hover:bg-primary-hover"
+						>研究・論文を読む<Icon name="arrow-down" size={15} /></a
+					>
+					<a
+						href="#cases"
+						class="inline-flex h-10 items-center gap-1.5 rounded-sm border border-line bg-paper px-4 text-sm font-medium text-body no-underline transition-colors hover:bg-paper-warm"
+						>導入事例を見る</a
+					>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Latest -->
+	<div class="mx-auto max-w-[1080px] px-8 pt-11 pb-2">
+		<div class="mb-1.5 flex items-baseline justify-between">
+			<span class="sk-eyebrow">最新の記事 ＿ Latest</span>
+			<a href={`${base}research/`} class="text-[13px] text-link no-underline"
+				>すべての記事 →</a
+			>
+		</div>
+		<div>
 			{
-				posts.map((post) => (
-					<li>
-						<a href={`${base}${post.id}/`}>{post.data.title}</a>
-						<PostMeta pubDate={post.data.pubDate} tags={post.data.tags} />
-					</li>
+				latest.map((post) => (
+					<a
+						href={`${base}${post.id}/`}
+						class="grid grid-cols-[96px_1fr_auto] items-center gap-[18px] border-t border-line-faint px-1.5 py-[15px] no-underline transition-colors hover:bg-paper-warm max-md:grid-cols-[72px_1fr]"
+					>
+						<span class="font-mono text-xs text-faint">{fmt(post.data.pubDate)}</span>
+						<span class="flex min-w-0 items-center gap-2.5">
+							<KindBadge type={post.data.type} />
+							<span class="truncate font-serif text-base text-strong">
+								{post.data.title}
+							</span>
+						</span>
+						<span class="text-right font-mono text-[11px] whitespace-nowrap text-muted max-md:hidden">
+							{post.data.source}
+						</span>
+					</a>
 				))
 			}
-		</ul>
-	</main>
-</Layout>
+		</div>
+	</div>
+
+	<!-- Research -->
+	<section id="research" class="mx-auto max-w-[1080px] scroll-mt-20 px-8 pt-12">
+		<div
+			class="mb-1 flex items-end justify-between border-b-[1.5px] border-line-strong pb-3"
+		>
+			<div class="flex items-baseline gap-4">
+				<span class="font-mono text-[13px] text-ink-300">01</span>
+				<div>
+					<div class="sk-eyebrow mb-0.5">Research ・ Papers</div>
+					<h2 class="font-serif text-2xl text-strong">研究・論文</h2>
+				</div>
+			</div>
+			<div class="flex items-baseline gap-3.5">
+				<span class="font-mono text-xs text-muted">{research.length} 件</span>
+				<a
+					href={`${base}research/`}
+					class="text-[13px] whitespace-nowrap text-link no-underline">すべて見る →</a
+				>
+			</div>
+		</div>
+		<div class="[&>*:first-child]:border-t-0">
+			{research.slice(0, 15).map((post) => <ArticleRow post={post} />)}
+		</div>
+	</section>
+
+	<!-- Cases -->
+	<section id="cases" class="mx-auto max-w-[1080px] scroll-mt-20 px-8 pt-14">
+		<div
+			class="mb-1 flex items-end justify-between border-b-[1.5px] border-line-strong pb-3"
+		>
+			<div class="flex items-baseline gap-4">
+				<span class="font-mono text-[13px] text-ink-300">02</span>
+				<div>
+					<div class="sk-eyebrow mb-0.5">Case Studies</div>
+					<h2 class="font-serif text-2xl text-strong">導入事例</h2>
+				</div>
+			</div>
+			<div class="flex items-baseline gap-3.5">
+				<span class="font-mono text-xs text-muted">{cases.length} 件</span>
+				<a
+					href={`${base}cases/`}
+					class="text-[13px] whitespace-nowrap text-link no-underline">すべて見る →</a
+				>
+			</div>
+		</div>
+		<div class="[&>*:first-child]:border-t-0">
+			{cases.slice(0, 15).map((post) => <ArticleRow post={post} />)}
+		</div>
+	</section>
+</BaseLayout>
