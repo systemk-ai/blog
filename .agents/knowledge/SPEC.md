@@ -1,105 +1,94 @@
 # SPEC
 
-Feature architecture for the blog. The **Implemented** section describes what exists
-today; the **Deferred** section specifies features that are designed but not yet built.
-When you implement a deferred feature, move it up to Implemented in the same commit and
-update REFERENCES.md if it adds a dependency (see AGENTS.md §Keep in sync).
+Feature architecture for the blog. **Implemented** describes what exists today; **Deferred**
+specifies designed-but-unbuilt features. When you ship a deferred feature, move it up to
+Implemented in the same commit (the `sync-spec` skill covers this) and update REFERENCES.md
+if it adds a dependency.
 
 ## Goals
 
-Minimal, fast, static blog. No client JS except where a feature requires it (e.g. charts,
-search). Deployed to GitHub Pages at `/blog/`. Authoring is plain MDX with co-located
-assets.
+A calm, fast, static research blog (SystemK AI). No client JS except where a feature needs it
+(charts, search). Deployed to GitHub Pages at `/blog/`. Authoring is MDX with co-located
+components/assets. Japanese-primary content (see DESIGN.md §Voice & language).
 
 ## Implemented
 
 ### Content model
 
-- Collection `blog` defined in `src/content.config.ts` via the **glob loader**
-  (`pattern: "**/index.mdx"`, `base: "./src/content/blog"`).
-- One folder per article: `src/content/blog/<slug>/index.mdx`. The loader derives the
-  entry `id` from the folder, stripping the trailing `/index` — so
-  `article-1/index.mdx` → id `article-1`. Use `entry.id` (Astro 7 has no `entry.slug`).
-- Frontmatter schema (zod): `title` (string), `description` (string), `tags`
-  (string[], default `[]`), `pubDate` (coerced date), `draft` (bool, default `false`).
-- **Drafts:** excluded from list pages (`getCollection('blog', ({data}) => !data.draft)`),
-  but `getStaticPaths` enumerates **all** entries, so a draft is still built and reachable
-  at its direct URL.
+- Collections in `src/content.config.ts`:
+  - `blog` — glob `src/content/blog/<slug>/index.mdx` (folder-per-article). The id is the
+    folder name (loader strips trailing `/index`). Use `entry.id` (Astro 7 has no `slug`).
+  - `authors` — glob `src/content/authors/<id>/index.mdx` (folder-per-author, so bios can
+    embed components/assets). Body is the bio.
+  - `tags` — `file()` loader on `src/content/tags.json`; optional `{ description }` per tag,
+    keyed by tag name. Tags used by articles but absent here have **no** description (the tag
+    page omits the description line).
+- Article frontmatter (zod): `title`, `description`, `summary?`, `type` (`research`|`case`),
+  `tags` (string[]), `source?`, `authors` (`z.array(reference("authors"))`), `pubDate`,
+  `draft` (default `false`). Author schema: `nameJa`, `nameEn`, `role`, `affiliation?`, `links`.
+- **Two streams:** `type: research`（研究・論文）and `type: case`（導入事例）drive the home
+  sections and the list pages.
+- **Drafts:** excluded from all list pages (`!data.draft` filter); `getStaticPaths` still
+  enumerates every entry, so a draft is built and reachable at its direct URL.
 
 ### Routing (under base `/blog/`)
 
-- `src/pages/index.astro` — homepage = article list (drafts filtered out, sorted by
-  `pubDate` desc).
-- `src/pages/[...slug].astro` — article page; rest param so nested ids resolve; renders via
-  `import { render } from "astro:content"`. Body wrapped in `<article data-pagefind-body>`
-  (ready for Pagefind indexing).
-- **Base awareness:** internal links/assets are built from `import.meta.env.BASE_URL`
-  (`/blog/`); never hardcode the prefix. `trailingSlash: "always"`.
+- `index.astro` — home: hero + latest + Research + Cases sections.
+- `research.astro`, `cases.astro` — type-filtered list pages.
+- `[...slug].astro` — article (rest param; renders via `render(post)`; resolves `authors`
+  with `getEntries`; reading-time estimate; TOC + scroll-spy from `headings`). Body wrapped
+  in `<article data-pagefind-body>`.
+- `tags/[tag].astro`, `authors/[id].astro` — tag and author index pages.
+- `search.astro` — Pagefind UI page. `rss.xml.ts` — RSS feed endpoint.
+- `[slug].md.ts` — plain-markdown twin of each article at `/blog/<slug>.md` (frontmatter +
+  authored body; single-segment param — a rest param `[...slug].md` 404s in `astro dev`). The
+  article header's `ArticleActions` control copies it, opens it in a new tab, or opens the
+  GitHub source.
+- `llms.txt.ts`, `llms-full.txt.ts` — LLM index (links to the `.md` twins, grouped by stream)
+  and full-corpus endpoints at `/blog/llms.txt` and `/blog/llms-full.txt`.
+- **Base awareness:** all internal links/assets from `import.meta.env.BASE_URL` (= `/blog/`).
+  Config: `base: "/blog/"` (keep the trailing slash so `BASE_URL` keeps it — `base: "/blog"`
+  would make `${BASE_URL}path` resolve to `/blogpath`) + `trailingSlash: "ignore"` (so the
+  parameterised `.md` endpoint serves at `/blog/<slug>.md` in `astro dev`; a trailing-slash
+  config 404s it). Page links still use an explicit trailing slash.
 
-### Rendering pipeline (`astro.config.mjs`)
+### Rendering & styling
 
-- Markdown/MDX plugins are configured through `markdown.processor: unified({...})` from
-  `@astrojs/markdown-remark` (Astro 7; the `remarkPlugins`/`rehypePlugins` keys are
-  deprecated). MDX inherits this config.
-- **Math:** `remark-math` + `rehype-katex`; KaTeX CSS imported in `src/styles/global.css`.
-- **Code:** Astro's built-in Shiki highlighting (default; preserved by the unified processor).
-- **Headings:** `rehype-slug` (ids) then `rehype-autolink-headings` (`behavior: "wrap"`).
-- Shared metadata UI: `src/components/PostMeta.astro` (date + tags + draft badge).
+- Markdown/MDX via `markdown.processor: unified({...})` from `@astrojs/markdown-remark`.
+  Math: `remark-math` + `rehype-katex`. Code: built-in Shiki. Headings: `rehype-slug` then
+  `rehype-autolink-headings`.
+- **Styling:** Tailwind v4 utilities from the `@theme` block in the single stylesheet
+  `src/styles/global.css`; `.sk-prose` styles rendered MDX. See DESIGN.md / AGENTS.md.
+- **Components** (`src/components/`): `SiteHeader`, `SiteFooter`, `BaseLayout`, `ArticleRow`,
+  `ArticleList`, `KindBadge`, `Tag`, `PostMeta`, `AuthorCard`, `Icon` (inline Lucide), and
+  the `EChart.tsx` React island.
 
-## Deferred
+### Search (Pagefind)
 
-Each item lists its integration point and approach. Do not pre-build these; implement when
-requested.
+- Indexing runs in the **`astro:build:done` hook** in `astro.config.mjs` (`pagefind --site
+  <dist>`), so `astro build` always produces `/blog/pagefind/` — works with `withastro/action`.
+- `search.astro` loads the Pagefind UI with `bundlePath` = `` `${BASE_URL}pagefind/` `` (the
+  default `/pagefind/` 404s under the subpath) and reads `?q=` to auto-search.
 
-### RSS feed
+### RSS
 
-- **Status:** not built. Dependency `@astrojs/rss` already installed.
-- **Integration point:** static endpoint `src/pages/rss.xml.ts` exporting `GET(context)`.
-- **Approach:** `rss({ site: context.site, items })` where `items` come from
-  `getCollection('blog', ({data}) => !data.draft)`. Each `link` must be base-aware:
-  `` `${import.meta.env.BASE_URL}${post.id}/` ``. Served at `/blog/rss.xml`.
-- **Ref:** REFERENCES.md → RSS guide.
-
-### llms.txt / llms-full.txt / per-page `.md`
-
-- **Status:** not built. No official Astro recipe — use custom static endpoints.
-- **Integration points:**
-  - `src/pages/llms.txt.ts` — index (title + description + URL per non-draft article).
-  - `src/pages/llms-full.txt.ts` — same, concatenating full bodies (`entry.body`).
-  - `src/pages/[...slug].md.ts` — `getStaticPaths` over the collection, emitting
-    `entry.body` as `text/markdown` so each page has a `.md` twin.
-- **Approach:** endpoints `GET` returns `new Response(text, { headers: {...} })`. Static
-  endpoints run at build time and may call `getCollection`. All URLs sit under `/blog/`.
-- **Ref:** REFERENCES.md → Endpoints.
-
-### Pagefind search UI
-
-- **Status:** not built. Index hook (`data-pagefind-body`) already present on articles.
-- **Integration point:** post-build CLI `pnpm exec pagefind --site dist` (see the
-  `search-index` recipe in `justfile`; add the same step to `deploy.yml`), plus a search UI
-  component/island that loads the Pagefind bundle.
-- **Gotcha:** under the `/blog/` base the bundle is served at `/blog/pagefind/`; configure
-  the Pagefind UI `bundlePath` to `` `${import.meta.env.BASE_URL}pagefind/` `` — the default
-  `/pagefind/` 404s on GitHub Pages.
-- **Ref:** REFERENCES.md → Pagefind.
+- `src/pages/rss.xml.ts` via `@astrojs/rss`: non-draft items, base-aware `link`, `language` ja.
+  Served at `/blog/rss.xml`; linked from the header, footer, and `<head>`.
 
 ### Charts (ECharts)
 
-- **Status:** not built. Dependency `echarts` + `@astrojs/react` installed.
-- **Integration point:** shared React island `src/components/EChart.tsx`, imported in MDX
-  and hydrated with `client:visible` (ECharts needs the DOM — never SSR; never `client:load`
-  for above-the-fold-only charts use `client:visible`).
-- **Ref:** REFERENCES.md → ECharts.
+- `src/components/EChart.tsx` — React island, `echarts` lazy-loaded (separate chunk), SVG
+  renderer, DOM-only. Use in MDX with `client:visible`; pass a JSON-serialisable `option`.
 
-### Tag / archive index pages
+## Deferred
 
-- **Status:** not built. `tags` exist in the schema but no listing pages consume them yet.
-- **Integration point:** `src/pages/tags/[tag].astro` with `getStaticPaths` building one
-  page per distinct tag from `getCollection('blog')` (exclude drafts).
+None — all planned features are implemented. When adding a new planned-but-unbuilt feature,
+record it here with its integration point (see the `sync-spec` skill).
 
 ## Open decisions
 
-- `site`/`base` assume **project** Pages at `/blog/`. If a custom domain is adopted, set
-  `base: "/"`, update `site`, and add `public/CNAME`.
-- `tags` is modeled as `string[]`. If single-string frontmatter should be accepted, add a
-  `z.union([...]).transform(...)` in `src/content.config.ts` and note it here.
+- `site`/`base` assume **project** Pages at `/blog/`. For a custom domain, set `base: "/"`,
+  update `site`, and add `public/CNAME`.
+- Fonts use system stacks (no external CSS). Self-host woff2 under `public/fonts` if exact
+  IBM Plex / Noto JP rendering is required.
+- `tags` is `string[]`. To accept a single string, add a `z.union([...]).transform(...)`.

@@ -47,10 +47,11 @@ unfamiliar API rather than relying on memory. All links verified reachable on
 
 - GitHub Actions — https://docs.github.com/en/actions (llms.txt: https://docs.github.com/llms.txt)
 - GitHub Pages — https://docs.github.com/en/pages
-- Pages actions — configure-pages: https://github.com/actions/configure-pages ·
-  upload-pages-artifact: https://github.com/actions/upload-pages-artifact ·
-  deploy-pages: https://github.com/actions/deploy-pages
-- pnpm/action-setup — https://github.com/pnpm/action-setup
+- **Astro → GitHub Pages static deploy (the flow `deploy.yml` follows)** —
+  https://docs.astro.build/en/guides/deploy/github/
+- withastro/action (installs, builds, uploads the Pages artifact) — https://github.com/withastro/action
+- actions/deploy-pages — https://github.com/actions/deploy-pages
+- pnpm/action-setup (used by `ci.yml`) — https://github.com/pnpm/action-setup
 - Just (command runner) — https://just.systems/man/en/
 
 ## Conventions
