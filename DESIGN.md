@@ -250,15 +250,19 @@ emoji.
   (a verb). Hover darkens one step; press darkens again with a 1px optical settle. Secondary:
   white fill, hairline border, ink text. Focus shows a restrained 3px blue halo.
 - **Inputs / search.** White field, hairline border, 4px radius; focus shifts the border to
-  blue and adds the focus halo. The header search expands gently on focus.
+  blue and adds the focus halo. The header search expands gently on focus and opens a
+  **type-ahead dropdown** of the top results — paper surface, hairline border, soft `shadow-md`,
+  small type, warm-paper row hover, slate-blue match highlights.
 - **Cards & list rows.** A card is defined by its hairline border, 6px radius, and padding —
   not a heavy shadow. List rows are borderless with a 1px top rule and a warm-paper hover.
 - **Tags.** Pill outline (`999px`), hairline border, muted-ink sans label prefixed `#`.
 - **Kind badges.** Tiny uppercase pills marking content type: **research（Paper）** in
   slate-blue-on-tint, **case（導入事例）** in sage-on-tint.
-- **Code, formulas, figures, tables.** Code blocks sit on warm paper with a hairline border
-  and mono type; inline code is a sunken chip. Math renders via KaTeX. Tables use sans, a
-  `1.5px` header rule and `1px` row rules — no vertical lines, no zebra fills.
+- **Code, formulas, figures, tables.** Code blocks render via **astro-expressive-code** as a
+  calm dark "journal terminal" in the slate/ink palette (filename tab, quiet copy button,
+  slate-blue line/word highlights, soft line-wrap, hairline border); inline code is a light
+  sunken chip. Math renders via KaTeX. Tables use sans, a `1.5px` header rule and `1px` row
+  rules — no vertical lines, no zebra fills.
 - **Author card.** Avatar (round), name in sans (JP + EN), role in muted meta, short bio.
 
 **Implementation.** Build UI with **Tailwind utilities** mapped from these tokens via the

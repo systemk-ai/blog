@@ -40,12 +40,13 @@ const mdUrl = `${base}${post.id}.md`;
 		<a
 			href={backHref}
 			class="mb-5 inline-flex items-center gap-1.5 text-[13px] text-muted no-underline"
+			data-pagefind-ignore
 		>
 			<Icon name="arrow-left" size={14} />
 			{backLabel}
 		</a>
 
-		<div class="mb-4 flex flex-wrap items-center gap-2">
+		<div class="mb-4 flex flex-wrap items-center gap-2" data-pagefind-ignore>
 			<KindBadge type={post.data.type} />
 			{post.data.tags.map((t) => <Tag name={t} />)}
 		</div>
@@ -58,6 +59,7 @@ const mdUrl = `${base}${post.id}.md`;
 
 		<div
 			class="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle pb-5"
+			data-pagefind-ignore
 		>
 			<PostMeta
 				authors={authorNames}
@@ -91,7 +93,10 @@ const mdUrl = `${base}${post.id}.md`;
 
 		{
 			sections.length > 1 && (
-				<div class="my-7 rounded-md border border-line-faint bg-paper-warm px-5 py-4">
+				<div
+					class="my-7 rounded-md border border-line-faint bg-paper-warm px-5 py-4"
+					data-pagefind-ignore
+				>
 					<div class="sk-eyebrow mb-2.5 text-[11px]">目次 ＿ Contents</div>
 					<div class="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] max-md:grid-cols-1">
 						{sections.map((s, i) => (
@@ -111,7 +116,7 @@ const mdUrl = `${base}${post.id}.md`;
 			<Content />
 		</div>
 
-		<div class="mt-9 border-t border-line-subtle pt-6">
+		<div class="mt-9 border-t border-line-subtle pt-6" data-pagefind-ignore>
 			<div class="sk-eyebrow mb-2.5 text-[11px]">タグ</div>
 			<div class="mb-6 flex flex-wrap gap-2">
 				{post.data.tags.map((t) => <Tag name={t} />)}

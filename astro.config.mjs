@@ -1,7 +1,5 @@
 // @ts-check
 
-import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import markdoc from "@astrojs/markdoc";
 import { unified } from "@astrojs/markdown-remark";
 import mdx from "@astrojs/mdx";
@@ -10,26 +8,11 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import expressiveCode from "astro-expressive-code";
+import pagefind from "astro-pagefind";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import remarkMath from "remark-math";
-
-// Run Pagefind after the static build so full-text search works with any deploy
-// flow (including withastro/action). Indexes the [data-pagefind-body] regions.
-/** @returns {import("astro").AstroIntegration} */
-function pagefind() {
-	return {
-		name: "pagefind",
-		hooks: {
-			"astro:build:done": ({ dir }) => {
-				execFileSync("pagefind", ["--site", fileURLToPath(dir)], {
-					stdio: "inherit",
-				});
-			},
-		},
-	};
-}
 
 const isDevcontainer = process.env.REMOTE_CONTAINERS === "true";
 const isCodespaces = process.env.CODESPACES === "true";
@@ -64,7 +47,8 @@ export default defineConfig({
 	vite: {
 		plugins: [tailwindcss()],
 	},
-	// expressiveCode() must precede mdx() so it processes fenced code in .mdx.
+	// expressiveCode() before mdx() (processes fenced code in .mdx). pagefind() is
+	// astro-pagefind: indexes on `astro build`, serves the built index in `astro dev`.
 	integrations: [
 		expressiveCode(),
 		mdx(),

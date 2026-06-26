@@ -55,7 +55,9 @@ components/assets. Japanese-primary content (see DESIGN.md §Voice & language).
 ### Rendering & styling
 
 - Markdown/MDX via `markdown.processor: unified({...})` from `@astrojs/markdown-remark`.
-  Math: `remark-math` + `rehype-katex`. Code: built-in Shiki. Headings: `rehype-slug` then
+  Math: `remark-math` + `rehype-katex`. Code: **astro-expressive-code** (dark theme + copy /
+  filename frames / line-word highlight / soft-wrap, configured in `ec.config.mjs`; integration
+  ordered before `mdx()`). Headings: `rehype-slug` then
   `rehype-autolink-headings`.
 - **Styling:** Tailwind v4 utilities from the `@theme` block in the single stylesheet
   `src/styles/global.css`; `.sk-prose` styles rendered MDX. See DESIGN.md / AGENTS.md.
@@ -65,10 +67,16 @@ components/assets. Japanese-primary content (see DESIGN.md §Voice & language).
 
 ### Search (Pagefind)
 
-- Indexing runs in the **`astro:build:done` hook** in `astro.config.mjs` (`pagefind --site
-  <dist>`), so `astro build` always produces `/blog/pagefind/` — works with `withastro/action`.
-- `search.astro` loads the Pagefind UI with `bundlePath` = `` `${BASE_URL}pagefind/` `` (the
-  default `/pagefind/` 404s under the subpath) and reads `?q=` to auto-search.
+- **astro-pagefind** integration: indexes the built HTML on `astro build` (→ `/blog/pagefind/`,
+  works with `withastro/action`) and serves that index during `astro dev` — **after one build**
+  (Pagefind can't live-index in dev; search is empty in dev until you've built once).
+- Header **type-ahead** (`SearchBox.astro`, used by `SiteHeader`): lazy-loads the Pagefind JS
+  API on first focus and shows the top 5 results in a themed dropdown (`debouncedSearch` →
+  `result.data()`); plain Enter submits the form to the full page; keyboard + outside-click.
+- `src/pages/search.astro` is the full results view (Pagefind UI, `bundlePath` =
+  `` `${BASE_URL}pagefind/` ``, reads `?q=` to auto-search).
+- Article chrome (back link, badges, tags, meta, TOC, footer) is `data-pagefind-ignore`d so
+  excerpts are title + abstract + prose; the `<article>` carries `data-pagefind-body`.
 
 ### RSS
 

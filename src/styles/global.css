@@ -157,6 +157,14 @@ body {
 	color: var(--color-muted);
 }
 
+/* Match highlights in the header search dropdown's Pagefind excerpts (injected HTML). */
+[data-search-dropdown] mark {
+	background: var(--color-blue-50);
+	color: inherit;
+	border-radius: 2px;
+	padding: 0 1px;
+}
+
 /* Article body — journal prose. Serif 本文, generous JP leading, hairline rules.
    The documented exception to Tailwind-first: this styles generated MDX HTML. */
 .sk-prose {

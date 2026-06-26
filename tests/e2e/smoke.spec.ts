@@ -45,6 +45,12 @@ test("article: title, math, co-located component, chart and copy control", async
 	await expect(
 		page.getByRole("link", { name: /GitHubソースを開く/ }),
 	).toBeVisible();
+	// Code block themed by Expressive Code: filename frame + copy button.
+	await expect(page.locator(".expressive-code").first()).toBeVisible();
+	await expect(page.getByText("train_loop.py")).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /Copy to clipboard/i }),
+	).toHaveCount(1);
 });
 
 test("per-page .md twin serves plain markdown, not a 404 page", async ({
@@ -114,6 +120,22 @@ test("search page loads the Pagefind UI", async ({ page }) => {
 	await expect(page.locator("#search input").first()).toBeVisible({
 		timeout: 8000,
 	});
+});
+
+test("header search shows a type-ahead dropdown of results", async ({
+	page,
+}) => {
+	await page.goto("./");
+	const input = page.locator("[data-search-input]");
+	await input.click();
+	await input.fill("物体");
+	const dropdown = page.locator("[data-search-dropdown]");
+	await expect(dropdown.locator("a[role=option]").first()).toBeVisible({
+		timeout: 8000,
+	});
+	await expect(
+		dropdown.getByText(/物体検出モデルの事前学習/).first(),
+	).toBeVisible();
 });
 
 test("rss feed serves the articles", async ({ page }) => {

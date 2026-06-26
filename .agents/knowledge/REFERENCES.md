@@ -27,12 +27,15 @@ unfamiliar API rather than relying on memory. All links verified reachable on
 - rehype-autolink-headings — https://github.com/rehypejs/rehype-autolink-headings
 - KaTeX supported functions — https://katex.org/docs/supported.html
 - ECharts (charts) — https://echarts.apache.org/en/index.html
+- Expressive Code (code blocks: copy, frames, highlight, wrap) — https://expressive-code.com/
 - MDX language — https://mdxjs.com/
 - Tailwind CSS — https://tailwindcss.com/docs
 
 ## Search
 
 - Pagefind — https://pagefind.app/ (repo: https://github.com/CloudCannon/pagefind)
+- Pagefind JS API (powers the header type-ahead) — https://pagefind.app/docs/api/
+- astro-pagefind (build index + serve in dev) — https://github.com/shishkin/astro-pagefind
 
 ## Quality & testing
 

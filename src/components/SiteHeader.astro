@@ -1,5 +1,6 @@
 ---
 import Icon from "./Icon.astro";
+import SearchBox from "./SearchBox.astro";
 
 interface Props {
 	active?: "home" | "research" | "cases";
@@ -41,20 +42,7 @@ const nav = [
 			}
 		</nav>
 		<div class="ml-auto flex items-center gap-3">
-			<form
-				method="get"
-				action={`${base}search/`}
-				class="flex h-[34px] items-center gap-2 rounded-sm border border-line-subtle bg-paper px-3 transition-colors focus-within:border-blue-400"
-			>
-				<Icon name="search" size={15} class="flex-none text-faint" />
-				<input
-					type="search"
-					name="q"
-					placeholder="記事を検索"
-					aria-label="記事を検索"
-					class="w-[132px] border-0 bg-transparent font-sans text-[13px] text-body outline-none transition-all focus:w-[200px]"
-				/>
-			</form>
+			<SearchBox />
 			<a
 				href={`${base}rss.xml`}
 				title="RSS フィード"
