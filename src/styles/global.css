@@ -128,6 +128,12 @@
 	}
 }
 
+/* Always reserve the scrollbar gutter so the viewport width — and the centered,
+   max-width header — stays put between short and tall pages (no icon shift). */
+html {
+	scrollbar-gutter: stable;
+}
+
 /* Page surface + JP punctuation metrics. Components/prose handle the rest. */
 body {
 	font-family: var(--font-sans);
