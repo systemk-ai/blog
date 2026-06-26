@@ -5,7 +5,7 @@ import SearchBox from "./SearchBox.astro";
 interface Props {
 	active?: "home" | "research" | "cases";
 }
-const { active = "home" } = Astro.props;
+const { active } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const nav = [
 	{ id: "home", label: "ホーム", href: base },
