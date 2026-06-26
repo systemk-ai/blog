@@ -83,6 +83,17 @@ components/assets. Japanese-primary content (see DESIGN.md §Voice & language).
 - `src/pages/rss.xml.ts` via `@astrojs/rss`: non-draft items, base-aware `link`, `language` ja.
   Served at `/blog/rss.xml`; linked from the header, footer, and `<head>`.
 
+### Sitemap & robots
+
+- **`@astrojs/sitemap`** emits `/blog/sitemap-index.xml` (+ `sitemap-0.xml`) on `astro build`.
+  A `filter` in `astro.config.mjs` drops draft articles and the `/search/` page so only
+  indexable, published URLs ship. Draft slugs are read from `index.mdx` frontmatter at build
+  (the integration only sees final URLs), mirroring the `!data.draft` rule used everywhere else.
+- `src/pages/robots.txt.ts` serves `/blog/robots.txt`: allow-all plus an absolute `Sitemap:`
+  line built from `site` + `BASE_URL`. **Caveat:** on a project subpath, crawlers only honour
+  robots.txt at the host root (`/robots.txt`), so submit the sitemap directly in Search Console
+  (or move to a custom domain at `/` — see §Open decisions).
+
 ### Charts (ECharts)
 
 - `src/components/EChart.tsx` — React island, `echarts` lazy-loaded (separate chunk), SVG
