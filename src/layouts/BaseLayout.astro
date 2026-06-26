@@ -33,9 +33,11 @@ const canonical = Astro.site
 		{description && <meta name="description" content={description} />}
 		<title>{fullTitle}</title>
 	</head>
-	<body>
+	<body class="flex min-h-dvh flex-col">
 		<SiteHeader active={active} />
-		<slot />
+		<main class="flex-1">
+			<slot />
+		</main>
 		<SiteFooter />
 	</body>
 </html>
