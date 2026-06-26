@@ -1,5 +1,7 @@
 // @ts-check
 
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import markdoc from "@astrojs/markdoc";
 import { unified } from "@astrojs/markdown-remark";
 import mdx from "@astrojs/mdx";
@@ -16,6 +18,22 @@ import remarkMath from "remark-math";
 
 const isDevcontainer = process.env.REMOTE_CONTAINERS === "true";
 const isCodespaces = process.env.CODESPACES === "true";
+
+// Slugs of draft articles (`draft: true`), read from frontmatter at build time. The
+// sitemap, like every list/feed/llms endpoint, must not advertise unpublished posts —
+// the article page still serves them at their direct URL. `@astrojs/sitemap` only sees
+// final URLs, so we derive the exclusion set here rather than from collection data.
+const blogDir = fileURLToPath(new URL("./src/content/blog", import.meta.url));
+const draftSlugs = new Set(
+	readdirSync(blogDir, { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.filter((entry) => {
+			const source = readFileSync(`${blogDir}/${entry.name}/index.mdx`, "utf8");
+			const frontmatter = source.split("---")[1] ?? "";
+			return /^\s*draft:\s*true\s*$/m.test(frontmatter);
+		})
+		.map((entry) => entry.name),
+);
 
 // https://astro.build/config
 export default defineConfig({
@@ -52,7 +70,15 @@ export default defineConfig({
 	integrations: [
 		expressiveCode(),
 		mdx(),
-		sitemap(),
+		// Keep drafts and the search page out of the sitemap so crawlers only get
+		// indexable, published URLs (drafts stay reachable by direct URL).
+		sitemap({
+			filter: (page) => {
+				const path = new URL(page).pathname.replace(/\/$/, "");
+				if (path.endsWith("/search")) return false;
+				return !draftSlugs.has(path.split("/").pop() ?? "");
+			},
+		}),
 		react(),
 		markdoc(),
 		pagefind(),

@@ -10,6 +10,7 @@ unfamiliar API rather than relying on memory. All links verified reachable on
 - Content collections — https://docs.astro.build/en/guides/content-collections/
 - Markdown content & plugins — https://docs.astro.build/en/guides/markdown-content/
 - MDX integration — https://docs.astro.build/en/guides/integrations-guide/mdx/
+- Sitemap integration (`filter`, robots.txt) — https://docs.astro.build/en/guides/integrations-guide/sitemap/
 - Endpoints (static files, `.txt`/`.md`/`.xml`) — https://docs.astro.build/en/guides/endpoints/
 - Images & assets — https://docs.astro.build/en/guides/images/
 - Styling & Tailwind — https://docs.astro.build/en/guides/styling/
