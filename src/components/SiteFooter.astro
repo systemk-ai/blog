@@ -37,20 +37,19 @@ const year = 2002;
 					href={`${base}cases/`}
 					class="text-muted no-underline hover:text-strong">導入事例</a
 				>
-				<a
-					href={`${base}search/`}
-					class="text-muted no-underline hover:text-strong">記事を検索</a
-				>
 			</div>
 			<div class="flex flex-col gap-2.5">
-				<span class="sk-eyebrow text-[11px]">ソース</span>
+				<span class="sk-eyebrow text-[11px]">リソース</span>
 				<a
 					href="https://github.com/systemk-ai/blog"
 					class="inline-flex items-center gap-1.5 text-muted no-underline hover:text-strong"
 				>
 					<Icon name="github" size={13} /> GitHub
 				</a>
-				<span class="text-faint">GitHub Pages で公開</span>
+				<a
+					href="https://www.systemk.co.jp/"
+					class="text-muted no-underline hover:text-strong">システム・ケイ</a
+				>
 			</div>
 		</div>
 	</div>
@@ -59,7 +58,10 @@ const year = 2002;
 			class="mx-auto flex max-w-[1080px] flex-wrap justify-between gap-4 px-8 py-4 text-[11px] text-faint"
 		>
 			<span>© {year} System K Corp. All Rights Reserved.</span>
-			<span>株式会社システム・ケイ</span>
+			<a
+				href="https://www.systemk.co.jp/"
+				class="text-faint no-underline hover:text-strong">株式会社システム・ケイ</a
+			>
 		</div>
 	</div>
 </footer>
