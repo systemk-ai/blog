@@ -42,6 +42,20 @@ const base = import.meta.env.BASE_URL;
 <script>
 	const base = import.meta.env.BASE_URL;
 
+	// Escape the user's typed query before interpolating it into innerHTML below.
+	// The query is live input (not URL-reflected), so this is self-XSS only — escape
+	// it as defence-in-depth so a pasted payload can never execute in the dropdown.
+	const escapeHtml = (s: string) => {
+		const map: Record<string, string> = {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#39;",
+		};
+		return s.replace(/[&<>"']/g, (c) => map[c] ?? c);
+	};
+
 	// biome-ignore lint/suspicious/noExplicitAny: Pagefind module has no bundled types
 	let pfPromise: Promise<any> | null = null;
 	function loadPagefind() {
@@ -99,7 +113,7 @@ const base = import.meta.env.BASE_URL;
 				search.results.slice(0, 5).map((r: any) => r.data()),
 			);
 			if (!top.length) {
-				dropdown.innerHTML = `<div class="px-3 py-3 text-xs text-muted">「${q}」に一致する記事はありません</div>`;
+				dropdown.innerHTML = `<div class="px-3 py-3 text-xs text-muted">「${escapeHtml(q)}」に一致する記事はありません</div>`;
 				open();
 				return;
 			}
