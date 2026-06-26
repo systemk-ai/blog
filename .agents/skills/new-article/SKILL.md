@@ -28,7 +28,9 @@ Create one article as a **folder** under `src/content/blog/`. The loader only pi
    ```
 3. **Write the body** in MDX. Available out of the box:
    - **Math:** inline `$...$`, display `$$...$$` (KaTeX).
-   - **Code:** fenced blocks with a language tag (Shiki highlighting).
+   - **Code:** fenced blocks via Expressive Code — the meta string adds features, e.g.
+     ` ```py title="train.py" {2} ` gives a filename tab, copy button and a highlighted
+     line; long lines soft-wrap by default (`wrap=false` to opt out).
    - **Headings:** `##` headings are auto-anchored and populate the article TOC.
 4. **Custom components in MDX** — import and render them:
    - One-off, co-located: `import Note from "./Note.astro"` then `<Note .../>`. Keep

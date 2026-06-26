@@ -219,16 +219,8 @@ body {
 	border-radius: var(--radius-xs);
 	padding: 0.1em 0.35em;
 }
-.sk-prose pre {
-	font-family: var(--font-mono);
-	font-size: var(--text-sm);
-	line-height: var(--leading-normal);
-	background: var(--color-paper-warm);
-	border: 1px solid var(--color-line-subtle);
-	border-radius: var(--radius-md);
-	padding: 1rem 1.5rem;
-	overflow-x: auto;
-}
+/* Fenced code blocks are rendered (and themed) by astro-expressive-code — see
+   ec.config.mjs. Only inline code is styled here. */
 .sk-prose img {
 	max-width: 100%;
 	height: auto;

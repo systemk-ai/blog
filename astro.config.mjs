@@ -9,6 +9,7 @@ import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
+import expressiveCode from "astro-expressive-code";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
@@ -63,5 +64,13 @@ export default defineConfig({
 	vite: {
 		plugins: [tailwindcss()],
 	},
-	integrations: [mdx(), sitemap(), react(), markdoc(), pagefind()],
+	// expressiveCode() must precede mdx() so it processes fenced code in .mdx.
+	integrations: [
+		expressiveCode(),
+		mdx(),
+		sitemap(),
+		react(),
+		markdoc(),
+		pagefind(),
+	],
 });
