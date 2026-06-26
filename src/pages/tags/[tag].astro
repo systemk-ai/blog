@@ -1,0 +1,31 @@
+---
+import { getCollection } from "astro:content";
+import ArticleList from "../../components/ArticleList.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog", ({ data }) => !data.draft);
+	// Optional descriptions, centrally defined in src/content/tags.json. A tag that
+	// appears in an article but is absent here simply has no description.
+	const descByTag = new Map(
+		(await getCollection("tags")).map((t) => [t.id, t.data.description]),
+	);
+	const tags = [...new Set(posts.flatMap((p) => p.data.tags))];
+	return tags.map((tag) => ({
+		params: { tag },
+		props: {
+			tag,
+			description: descByTag.get(tag),
+			items: posts
+				.filter((p) => p.data.tags.includes(tag))
+				.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+		},
+	}));
+}
+
+const { tag, items, description } = Astro.props;
+---
+
+<BaseLayout title={`#${tag}`} description={description ?? `タグ「${tag}」の記事一覧。`}>
+	<ArticleList items={items} eyebrow="Tag" title={`#${tag}`} intro={description} />
+</BaseLayout>

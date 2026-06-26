@@ -1,0 +1,225 @@
+---
+import { getCollection, getEntries, render } from "astro:content";
+import ArticleActions from "../components/ArticleActions.astro";
+import AuthorCard from "../components/AuthorCard.astro";
+import Icon from "../components/Icon.astro";
+import KindBadge from "../components/KindBadge.astro";
+import PostMeta from "../components/PostMeta.astro";
+import Tag from "../components/Tag.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog");
+	return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const { Content, headings } = await render(post);
+const authors = post.data.authors.length
+	? await getEntries(post.data.authors)
+	: [];
+const authorNames = authors.map((a) => a.data.nameJa);
+const readingMinutes = Math.max(1, Math.round(post.body.length / 500));
+const sections = headings.filter((h) => h.depth === 2);
+const isCase = post.data.type === "case";
+const backHref = isCase ? `${base}cases/` : `${base}research/`;
+const backLabel = isCase ? "導入事例へ" : "研究・論文へ";
+const ghEdit = `https://github.com/systemk-ai/blog/edit/main/src/content/blog/${post.id}/index.mdx`;
+const ghIssue = "https://github.com/systemk-ai/blog/issues/new";
+const ghBlob = `https://github.com/systemk-ai/blog/blob/main/src/content/blog/${post.id}/index.mdx`;
+const mdUrl = `${base}${post.id}.md`;
+---
+
+<BaseLayout
+	title={post.data.title}
+	description={post.data.description}
+	active={isCase ? "cases" : "research"}
+>
+	<article data-pagefind-body class="mx-auto max-w-[760px] px-7 pt-9 pb-6">
+		<a
+			href={backHref}
+			class="mb-5 inline-flex items-center gap-1.5 text-[13px] text-muted no-underline"
+			data-pagefind-ignore
+		>
+			<Icon name="arrow-left" size={14} />
+			{backLabel}
+		</a>
+
+		<div class="mb-4 flex flex-wrap items-center gap-2" data-pagefind-ignore>
+			<KindBadge type={post.data.type} />
+			{post.data.tags.map((t) => <Tag name={t} />)}
+		</div>
+
+		<h1
+			class="mb-3 font-serif text-3xl leading-[1.26] tracking-tight text-strong"
+		>
+			{post.data.title}
+		</h1>
+
+		<div
+			class="flex flex-wrap items-center justify-between gap-4 border-b border-line-subtle pb-5"
+			data-pagefind-ignore
+		>
+			<PostMeta
+				authors={authorNames}
+				pubDate={post.data.pubDate}
+				source={post.data.source}
+				readingMinutes={readingMinutes}
+			/>
+			<ArticleActions mdUrl={mdUrl} ghUrl={ghBlob} />
+		</div>
+
+		{
+			post.data.draft && (
+				<p class="mt-5 rounded-sm border border-line-subtle bg-paper-warm px-4 py-2 text-sm text-muted">
+					この記事は下書きです。
+				</p>
+			)
+		}
+
+		{
+			post.data.summary && (
+				<div class="mt-7 mb-2 flex gap-3 rounded-sm border border-line-subtle border-l-[3px] border-l-primary bg-blue-50 px-4 py-3">
+					<span class="flex-none pt-0.5 text-[11px] font-semibold tracking-[0.06em] text-primary-active uppercase">
+						概要
+					</span>
+					<p class="font-serif text-sm leading-[1.85] text-body">
+						{post.data.summary}
+					</p>
+				</div>
+			)
+		}
+
+		{
+			sections.length > 1 && (
+				<div
+					class="my-7 rounded-md border border-line-faint bg-paper-warm px-5 py-4"
+					data-pagefind-ignore
+				>
+					<div class="sk-eyebrow mb-2.5 text-[11px]">目次 ＿ Contents</div>
+					<div class="grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px] max-md:grid-cols-1">
+						{sections.map((s, i) => (
+							<a
+								href={`#${s.slug}`}
+								class="text-muted no-underline hover:text-strong"
+							>
+								{String(i + 1).padStart(2, "0")} ・ {s.text}
+							</a>
+						))}
+					</div>
+				</div>
+			)
+		}
+
+		<div class="sk-prose mt-8">
+			<Content />
+		</div>
+
+		<div class="mt-9 border-t border-line-subtle pt-6" data-pagefind-ignore>
+			<div class="sk-eyebrow mb-2.5 text-[11px]">タグ</div>
+			<div class="mb-6 flex flex-wrap gap-2">
+				{post.data.tags.map((t) => <Tag name={t} />)}
+			</div>
+			{
+				authors.length > 0 && (
+					<div class="mb-6 grid gap-3 md:grid-cols-2">
+						{authors.map((a) => (
+							<AuthorCard author={a} />
+						))}
+					</div>
+				)
+			}
+			<div
+				class="flex flex-wrap items-center justify-between gap-3.5 rounded-md border border-line-faint bg-paper-warm px-4 py-4"
+			>
+				<div class="text-[13px] leading-relaxed text-muted">
+					<div class="mb-0.5 font-medium text-body">この記事を改善する</div>
+					誤りの指摘や補足は GitHub で歓迎します。
+				</div>
+				<div class="flex gap-2">
+					<a
+						href={ghEdit}
+						class="inline-flex h-9 items-center gap-1.5 rounded-sm border border-line bg-paper px-3 text-[13px] text-body no-underline transition-colors hover:bg-paper-warm"
+					>
+						<Icon name="pencil-line" size={14} /> 編集を提案
+					</a>
+					<a
+						href={ghIssue}
+						class="inline-flex h-9 items-center gap-1.5 rounded-sm border border-line bg-paper px-3 text-[13px] text-body no-underline transition-colors hover:bg-paper-warm"
+					>
+						<Icon name="message-square" size={14} /> Issue で議論
+					</a>
+				</div>
+			</div>
+		</div>
+	</article>
+
+	{
+		sections.length > 1 && (
+			<nav
+				class="fixed top-1/2 right-9 z-30 hidden w-[190px] -translate-y-1/2 xl:block"
+				aria-label="目次"
+			>
+				<div class="sk-eyebrow mb-2.5 text-[10px]">On this page</div>
+				<div class="flex flex-col">
+					{sections.map((s) => (
+						<a
+							href={`#${s.slug}`}
+							data-slug={s.slug}
+							class="sk-secnav-link flex items-center gap-2.5 py-1 no-underline"
+						>
+							<span class="h-0.5 w-[18px] flex-none bg-line-subtle transition-colors" />
+							<span class="font-sans text-xs leading-tight text-muted transition-colors">
+								{s.text}
+							</span>
+						</a>
+					))}
+				</div>
+			</nav>
+		)
+	}
+</BaseLayout>
+
+<script>
+	// Scroll-spy for the right-rail section nav (progressive enhancement).
+	const links = [
+		...document.querySelectorAll<HTMLAnchorElement>(".sk-secnav-link"),
+	];
+	if (links.length) {
+		const ids = links.map((l) => l.dataset.slug ?? "");
+		const setActive = () => {
+			let cur = ids[0];
+			for (const id of ids) {
+				const el = document.getElementById(id);
+				if (el && el.getBoundingClientRect().top <= 140) cur = id;
+			}
+			for (const l of links) {
+				const on = l.dataset.slug === cur;
+				const bar = l.querySelector<HTMLElement>("span");
+				const txt = l.querySelector<HTMLElement>("span:last-child");
+				if (bar)
+					bar.style.background = on
+						? "var(--color-primary)"
+						: "var(--color-line-subtle)";
+				if (txt) {
+					txt.style.color = on ? "var(--color-strong)" : "var(--color-muted)";
+					txt.style.fontWeight = on ? "600" : "400";
+				}
+			}
+		};
+		let raf = 0;
+		window.addEventListener(
+			"scroll",
+			() => {
+				if (!raf)
+					raf = requestAnimationFrame(() => {
+						raf = 0;
+						setActive();
+					});
+			},
+			{ passive: true },
+		);
+		setActive();
+	}
+</script>

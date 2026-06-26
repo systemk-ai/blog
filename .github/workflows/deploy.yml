@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow the deploy job to publish to GitHub Pages via OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One concurrent deployment; let in-progress runs finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Official Astro → GitHub Pages static flow:
+      # https://docs.astro.build/en/guides/deploy/github/
+      # withastro/action installs deps (pnpm, from packageManager), runs the build,
+      # and uploads the Pages artifact. site/base come from astro.config.mjs, and the
+      # Pagefind search index is produced by the astro:build:done hook in that config.
+      - uses: withastro/action@v3
+        with:
+          node-version: 22
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

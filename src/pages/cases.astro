@@ -1,0 +1,22 @@
+---
+import { getCollection } from "astro:content";
+import ArticleList from "../components/ArticleList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const items = (
+	await getCollection("blog", ({ data }) => !data.draft && data.type === "case")
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+	title="導入事例"
+	description="視覚AI・生成AIの実運用に至った導入事例の一覧。"
+	active="cases"
+>
+	<ArticleList
+		items={items}
+		eyebrow="Case Studies"
+		title="導入事例"
+		intro="顧客と共同で実運用に至った AI 導入のケーススタディ一覧です。"
+	/>
+</BaseLayout>

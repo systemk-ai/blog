@@ -1,0 +1,52 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Icon from "./Icon.astro";
+import Tag from "./Tag.astro";
+
+interface Props {
+	post: CollectionEntry<"blog">;
+}
+const { post } = Astro.props;
+const { data } = post;
+const base = import.meta.env.BASE_URL;
+const href = `${base}${post.id}/`;
+const dateF = data.pubDate.toISOString().slice(0, 10).replace(/-/g, ".");
+const topic = data.tags[0] ?? "";
+const blurb = data.summary ?? data.description;
+---
+
+<div
+	class="grid grid-cols-[104px_1fr_150px] gap-5 rounded-sm border-t border-line-faint px-1 py-5 transition-colors hover:bg-paper-warm max-md:grid-cols-1 max-md:gap-2"
+>
+	<div class="font-mono text-xs leading-normal">
+		<div class="font-medium text-primary-active">{topic}</div>
+		<div class="text-faint">{dateF}</div>
+	</div>
+	<div class="min-w-0">
+		<a
+			href={href}
+			class="font-serif text-lg leading-snug text-strong no-underline hover:text-primary-active"
+			>{data.title}</a
+		>
+		<p class="mt-2 mb-3 line-clamp-2 font-serif text-[13px] leading-[1.7] text-muted">
+			{blurb}
+		</p>
+		<div class="flex flex-wrap gap-1.5">
+			{data.tags.map((t) => <Tag name={t} />)}
+		</div>
+	</div>
+	<div class="flex flex-col items-end justify-between max-md:items-start">
+		{
+			data.source && (
+				<span class="text-right font-mono text-xs whitespace-nowrap text-muted">
+					{data.source}
+				</span>
+			)
+		}
+		<a
+			href={href}
+			class="mt-auto inline-flex items-center gap-1 text-xs text-muted no-underline"
+			>読む<Icon name="arrow-right" size={13} /></a
+		>
+	</div>
+</div>

@@ -1,0 +1,153 @@
+---
+import Icon from "./Icon.astro";
+
+// Header search: a form that submits to the full /search/ page, plus a type-ahead
+// dropdown of the top 5 results powered by the Pagefind JS API. The Pagefind bundle
+// is lazy-loaded on first focus (so it isn't fetched on every page view). The index
+// is served by astro-pagefind (built on `astro build`, served in `astro dev`).
+const base = import.meta.env.BASE_URL;
+---
+
+<div class="relative" data-searchbox>
+	<form
+		method="get"
+		action={`${base}search/`}
+		role="search"
+		class="flex h-[34px] items-center gap-2 rounded-sm border border-line-subtle bg-paper px-3 transition-colors focus-within:border-blue-400"
+	>
+		<Icon name="search" size={15} class="flex-none text-faint" />
+		<input
+			type="search"
+			name="q"
+			placeholder="記事を検索"
+			aria-label="記事を検索"
+			autocomplete="off"
+			role="combobox"
+			aria-expanded="false"
+			aria-controls="sk-search-results"
+			data-search-input
+			class="w-[132px] border-0 bg-transparent font-sans text-[13px] text-body outline-none transition-all focus:w-[210px]"
+		/>
+	</form>
+	<div
+		id="sk-search-results"
+		role="listbox"
+		data-search-dropdown
+		hidden
+		class="absolute top-[42px] right-0 z-50 w-[380px] max-w-[80vw] overflow-hidden rounded-md border border-line-subtle bg-paper p-1 shadow-md"
+	>
+	</div>
+</div>
+
+<script>
+	const base = import.meta.env.BASE_URL;
+
+	// Escape the user's typed query before interpolating it into innerHTML below.
+	// The query is live input (not URL-reflected), so this is self-XSS only — escape
+	// it as defence-in-depth so a pasted payload can never execute in the dropdown.
+	const escapeHtml = (s: string) => {
+		const map: Record<string, string> = {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#39;",
+		};
+		return s.replace(/[&<>"']/g, (c) => map[c] ?? c);
+	};
+
+	// biome-ignore lint/suspicious/noExplicitAny: Pagefind module has no bundled types
+	let pfPromise: Promise<any> | null = null;
+	function loadPagefind() {
+		if (!pfPromise) {
+			pfPromise = (async () => {
+				const pf = await import(
+					/* @vite-ignore */ `${base}pagefind/pagefind.js`
+				);
+				await pf.init();
+				return pf;
+			})().catch(() => null);
+		}
+		return pfPromise;
+	}
+
+	for (const root of document.querySelectorAll<HTMLElement>("[data-searchbox]")) {
+		const input = root.querySelector<HTMLInputElement>("[data-search-input]");
+		const dropdown = root.querySelector<HTMLElement>("[data-search-dropdown]");
+		if (!input || !dropdown) continue;
+		let items: HTMLAnchorElement[] = [];
+		let active = -1;
+
+		const close = () => {
+			dropdown.hidden = true;
+			input.setAttribute("aria-expanded", "false");
+			active = -1;
+		};
+		const open = () => {
+			dropdown.hidden = false;
+			input.setAttribute("aria-expanded", "true");
+		};
+		const setActive = (i: number) => {
+			active = i;
+			items.forEach((el, idx) => {
+				el.setAttribute("aria-selected", idx === i ? "true" : "false");
+				el.classList.toggle("bg-paper-warm", idx === i);
+			});
+		};
+
+		input.addEventListener("focus", loadPagefind, { once: true });
+
+		input.addEventListener("input", async () => {
+			const q = input.value.trim();
+			if (!q) {
+				dropdown.innerHTML = "";
+				close();
+				return;
+			}
+			const pf = await loadPagefind();
+			if (!pf) return;
+			const search = await pf.debouncedSearch(q, {}, 220);
+			if (!search) return; // superseded by a newer keystroke
+			const top = await Promise.all(
+				// biome-ignore lint/suspicious/noExplicitAny: Pagefind result type
+				search.results.slice(0, 5).map((r: any) => r.data()),
+			);
+			if (!top.length) {
+				dropdown.innerHTML = `<div class="px-3 py-3 text-xs text-muted">「${escapeHtml(q)}」に一致する記事はありません</div>`;
+				open();
+				return;
+			}
+			dropdown.innerHTML = top
+				.map(
+					// biome-ignore lint/suspicious/noExplicitAny: Pagefind result data
+					(r: any) =>
+						`<a role="option" href="${r.url}" class="block rounded-sm px-3 py-2 no-underline transition-colors hover:bg-paper-warm"><div class="truncate font-sans text-[13px] font-medium text-strong">${r.meta?.title ?? ""}</div><div class="mt-0.5 line-clamp-1 font-sans text-xs leading-snug text-muted">${r.excerpt}</div></a>`,
+				)
+				.join("");
+			items = [...dropdown.querySelectorAll<HTMLAnchorElement>("[role=option]")];
+			active = -1;
+			open();
+		});
+
+		input.addEventListener("keydown", (e) => {
+			if (dropdown.hidden || !items.length) return;
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setActive((active + 1) % items.length);
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				setActive((active - 1 + items.length) % items.length);
+			} else if (e.key === "Enter" && active >= 0) {
+				e.preventDefault();
+				window.location.href = items[active].href;
+			} else if (e.key === "Escape") {
+				close();
+				input.blur();
+			}
+		});
+
+		document.addEventListener("click", (e) => {
+			if (!root.contains(e.target as Node)) close();
+		});
+	}
+</script>

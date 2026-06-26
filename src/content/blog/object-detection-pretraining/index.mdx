@@ -1,0 +1,71 @@
+---
+title: "物体検出モデルの事前学習と少数データ微調整"
+description: "ImageNet 事前学習と社内データでの微調整による物体検出の精度改善を報告する。"
+summary: "ImageNet で事前学習した検出器を社内データセットで微調整し、mAP@0.5 の改善を検証した記録。"
+type: research
+tags: ["物体検出", "事前学習", "ビジュアルAI"]
+source: "社内テックレポート 2026"
+authors: ["hayashi", "tanaka"]
+pubDate: 2026-06-20
+draft: false
+---
+
+import EChart from "../../../components/EChart.tsx";
+import KeyResult from "./KeyResult.astro";
+
+export const lossCurve = {
+	grid: { left: 46, right: 16, top: 28, bottom: 30 },
+	color: ["#4a6b8a", "#bcc0bf"],
+	tooltip: { trigger: "axis" },
+	legend: { data: ["事前学習あり", "ベースライン"], top: 0, textStyle: { fontSize: 11 } },
+	xAxis: { type: "category", name: "epoch", data: ["0", "10", "20", "30", "40", "50"], axisLabel: { fontSize: 10 } },
+	yAxis: { type: "value", name: "val loss", axisLabel: { fontSize: 10 } },
+	series: [
+		{ name: "事前学習あり", type: "line", smooth: true, data: [4.2, 2.6, 1.8, 1.4, 1.18, 1.04] },
+		{ name: "ベースライン", type: "line", smooth: true, data: [4.2, 2.8, 2.05, 1.7, 1.5, 1.38] },
+	],
+};
+
+物体検出モデルを ImageNet で事前学習し、社内データセットで微調整した。本稿では、少数データ
+条件下での精度改善と、評価設計について述べる。
+
+## 実験設定
+
+学習データは社内で収集した 12,000 フレーム。評価は held-out の 2,000 フレームで行い、指標は
+mAP@0.5 を用いる。平均適合率（AP）は次式で与えられる。
+
+$$
+\mathrm{AP} = \int_0^1 p(r)\,dr
+$$
+
+ここで $p(r)$ は再現率 $r$ における適合率である。
+
+<KeyResult value="+3.2" label="mAP@0.5 の改善" note="事前学習あり vs なし（同一エポック）" />
+
+## 学習ループ
+
+簡略化した学習ループを示す。
+
+```python title="train_loop.py" {2}
+for images, targets in loader:
+    loss = model(images, targets)
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+```
+
+## 結果
+
+事前学習ありの構成で mAP@0.5 が改善した。学習の収束を図1に示す。図はカーソルを重ねると各点の
+値を表示する。
+
+<figure class="my-6 overflow-hidden rounded-md border border-line-subtle">
+	<div class="bg-paper p-4">
+		<EChart client:visible option={lossCurve} height={260} />
+	</div>
+	<figcaption class="border-t border-line-faint bg-paper-warm px-4 py-2.5 text-xs text-muted">
+		<strong class="text-strong">図1</strong>　学習曲線。事前学習あり（青）は同一エポックでより低い検証損失に収束する。
+	</figcaption>
+</figure>
+
+詳細な比較と誤差解析は別途報告する。

@@ -1,0 +1,28 @@
+---
+// Article byline + meta line: authors on top (body ink), date · source · reading
+// time beneath (faint). Author names are resolved by the page and passed in.
+interface Props {
+	authors?: string[];
+	pubDate: Date;
+	source?: string;
+	readingMinutes?: number;
+}
+const { authors = [], pubDate, source, readingMinutes } = Astro.props;
+const dateF = pubDate.toISOString().slice(0, 10).replace(/-/g, ".");
+const sub = [
+	`${dateF} 更新`,
+	source,
+	readingMinutes ? `読了 約${readingMinutes}分` : null,
+]
+	.filter(Boolean)
+	.join(" ・ ");
+---
+
+<div class="font-sans">
+	{
+		authors.length > 0 && (
+			<div class="text-[13px] text-body">{authors.join(" ・ ")}</div>
+		)
+	}
+	<div class="mt-0.5 text-xs text-faint">{sub}</div>
+</div>

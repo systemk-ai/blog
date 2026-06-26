@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+// The full search-results view (Pagefind UI). Pagefind assets are served by
+// astro-pagefind: indexed on `astro build`, served during `astro dev` after one build.
+// The header SearchBox gives a type-ahead dropdown of the top results.
+---
+
+<BaseLayout title="記事を検索" description="記事を全文検索します。">
+	<link rel="stylesheet" href={`${base}pagefind/pagefind-ui.css`} />
+	<section class="mx-auto max-w-[760px] px-7 pt-12 pb-16">
+		<div class="sk-eyebrow mb-3">Search</div>
+		<h1 class="mb-6 font-serif text-3xl tracking-tight text-strong">記事を検索</h1>
+		<div
+			id="search"
+			style="--pagefind-ui-primary: var(--color-blue-500); --pagefind-ui-text: var(--color-ink-800); --pagefind-ui-background: var(--color-paper); --pagefind-ui-border: var(--color-ink-200); --pagefind-ui-tag: var(--color-paper-warm); --pagefind-ui-font: var(--font-sans); --pagefind-ui-border-width: 1px; --pagefind-ui-border-radius: 4px;"
+		>
+		</div>
+	</section>
+</BaseLayout>
+
+<script is:inline src={`${base}pagefind/pagefind-ui.js`}></script>
+<script is:inline define:vars={{ base }}>
+	window.addEventListener("DOMContentLoaded", () => {
+		if (typeof PagefindUI === "undefined") return;
+		const params = new URLSearchParams(window.location.search);
+		const ui = new PagefindUI({
+			element: "#search",
+			bundlePath: `${base}pagefind/`,
+			showSubResults: true,
+			showImages: false,
+			translations: {
+				placeholder: "記事を検索",
+				zero_results: "「[SEARCH_TERM]」に一致する記事はありません",
+			},
+		});
+		const q = params.get("q");
+		if (q) ui.triggerSearch(q);
+	});
+</script>

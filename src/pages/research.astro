@@ -1,0 +1,25 @@
+---
+import { getCollection } from "astro:content";
+import ArticleList from "../components/ArticleList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const items = (
+	await getCollection(
+		"blog",
+		({ data }) => !data.draft && data.type === "research",
+	)
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+	title="研究・論文"
+	description="視覚AI・生成AIに関する研究記録と査読論文の一覧。"
+	active="research"
+>
+	<ArticleList
+		items={items}
+		eyebrow="Research ・ Papers"
+		title="研究・論文"
+		intro="視覚AI・生成AIに関する研究記録と査読論文の一覧です。"
+	/>
+</BaseLayout>
